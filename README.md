@@ -124,7 +124,7 @@ Get up and running with **IndexTTS** in just a few steps using Docker.
    This repo includes a ready-to-use Docker setup for IndexTTS:
 
    ```bash
-   git clone https://github.com/stellaria-universum/index-tts && cd index-tts
+   git clone -b docker https://github.com/stellaria-universum/index-tts && cd index-tts
    ```
 
 2. **Build and launch the container**  
