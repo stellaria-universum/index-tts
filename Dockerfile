@@ -33,7 +33,7 @@ RUN useradd -m -u 1001 appuser
 WORKDIR /app
 
 # Clone the repository
-RUN git clone https://github.com/index-tts/index-tts.git .
+RUN git clone https://github.com/stellaria-universum/index-tts.git .
 
 # Download large repository files with git lfs pull
 RUN git lfs pull
@@ -72,3 +72,4 @@ CMD if [ ! -d "/app/checkpoints/IndexTTS-2" ]; then \
         echo "Model already exists in /app/checkpoints, skipping download."; \
     fi && \
     uv run webui.py
+
