@@ -29,5 +29,4 @@ Get up and running with **IndexTTS** in just a few steps using Docker.
    ```
 
 > ⚠️ **Important**: The Docker image is **over 40 GB** in size. Make sure you have enough disk space and a stable internet connection for the initial build and download.
-
 ```
