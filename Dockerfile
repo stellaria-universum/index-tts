@@ -5,7 +5,6 @@ FROM nvidia/cuda:12.8.0-devel-ubuntu24.04 AS base
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PORT=7860 \
-    # Recommended for users with slow access to HuggingFace
     HF_ENDPOINT="https://hf-mirror.com" \
     DEBIAN_FRONTEND=noninteractive
 
@@ -39,31 +38,37 @@ RUN git clone https://github.com/index-tts/index-tts.git .
 # Download large repository files with git lfs pull
 RUN git lfs pull
 
-# Install 'uv' and 'huggingface-hub' globally (as root, using --break-system-packages)
+# Install 'uv' and 'huggingface-hub' globally
 RUN python3 -m pip install --no-cache-dir -U uv "huggingface-hub[cli]" --break-system-packages
 
-# Change ownership of the entire app directory to appuser before switching users
+# Change ownership of the app directory
 RUN chown -R appuser:appuser /app
 
 # Switch to non-root user
 USER appuser
 
-# Use 'uv' to sync the environment and install all project dependencies. 
+# Use 'uv' to sync and install dependencies
 RUN uv sync --all-extras
 
-# Download models into the image
-RUN huggingface-cli download IndexTeam/IndexTTS-2 --local-dir=/app/checkpoints
+# Ensure checkpoints folder exists (will be bound to host volume)
+RUN mkdir -p /app/checkpoints
 
-# Create directories for outputs and prompts.
+# Create directories for outputs and prompts
 RUN mkdir -p /app/outputs /app/prompts
 
-# Expose the port the application will run on
+# Expose the port
 EXPOSE 7860
 
-# Define volumes for persisting outputs AND PROMPTS
-VOLUME [ "/app/outputs", "/app/prompts" ]
+# Define volumes for persisting data
+VOLUME [ "/app/checkpoints", "/app/outputs", "/app/prompts" ]
 
-# NOTE: Healthcheck intentionally removed from docker-compose.yaml
-
-# Default command to run the Gradio application using 'uv run'
-CMD ["uv", "run", "webui.py"]
+# On container startup:
+# - Download model only if missing (so it lands in the mounted volume)
+# - Then run the app
+CMD if [ ! -d "/app/checkpoints/IndexTTS-2" ]; then \
+        echo "Downloading IndexTTS-2 model to /app/checkpoints..."; \
+        huggingface-cli download IndexTeam/IndexTTS-2 --local-dir=/app/checkpoints; \
+    else \
+        echo "Model already exists in /app/checkpoints, skipping download."; \
+    fi && \
+    uv run webui.py
